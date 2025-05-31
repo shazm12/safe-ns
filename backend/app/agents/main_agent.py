@@ -9,12 +9,13 @@ class MainAgent:
         self.ocr_agent = OCRAgent()
         self.nsfw_agent = NSFWAgent()
         self.toxcity_agent = ToxicityAgent()
+        self.imagePreprocessor = ImagePreprocessor()
 
     async def analyze(self, image: Image.Image) -> Dict:
 
         try:
             
-            processed_image = await ImagePreprocessor
+            processed_image = await self.imagePreprocessor.preprocess(image)
             
             # process these modules paralelly
             ocr_text, nsfw_result = await asyncio.gather(
