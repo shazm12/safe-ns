@@ -217,3 +217,5 @@ output/
 #test files
 *.jpg
 *.png
+test.py
+url-shortener-api-450218-07b5d589c515.json
