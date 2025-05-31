@@ -1,6 +1,7 @@
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain_community.chat_models import ChatOpenAI
+import json
 from dotenv import load_dotenv
 from typing import Dict, List
 import os
@@ -21,7 +22,7 @@ class ToxicityAgent:
 
     def _init_llm(self):
 
-        # Option 2: OpenAI (better for production)
+        # OpenAI LLM model
         return ChatOpenAI(
             model="gpt-3.5-turbo",
             api_key=api_key,
@@ -76,8 +77,6 @@ class ToxicityAgent:
             }
 
     def _parse_llm_response(self, response: str) -> Dict:
-        """Extract JSON from LLM output"""
-        import json
         try:
             data = json.loads(response.strip())
             return {
