@@ -1,7 +1,10 @@
+from PIL import Image
 import cv2
 import numpy as np
-from skimage import exposure
+import asyncio
 from skimage.filters import gaussian, median
+import io
+from typing import Dict
 
 class ImagePreprocessor:
     def __init__(self, target_size=(1600, 1200), gaussian_sigma=1, mean_kernel_size=3, quality=90):
@@ -12,56 +15,66 @@ class ImagePreprocessor:
             target_size (tuple): Target dimensions for resizing (width, height)
             gaussian_sigma (float): Sigma for Gaussian filter
             mean_kernel_size (int): Kernel size for mean filtering
+            quality (int): JPEG quality for output
         """
         self.target_size = target_size
         self.gaussian_sigma = gaussian_sigma
         self.mean_kernel_size = mean_kernel_size
         self.quality = quality
+        
+    async def preprocess(self, image: Image.Image) -> Image.Image:
+        """Async wrapper for image preprocessing"""
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            None, 
+            lambda: self._sync_preprocess(image)
+        )
     
-    def process(self, image_path):
-        """
-        Complete preprocessing pipeline
+    def _sync_preprocess(self, image: Image.Image) -> Image.Image:
+        """Actual preprocessing logic"""
+        img = np.array(image)
         
-        Args:
-            image_path (str): Path to input image
-            
-        Returns:
-            np.array: Preprocessed image ready for model input
-        """
+        if len(img.shape) == 3 and img.shape[2] == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         
-        # 1. Load and basic processing
-        img = self._load_and_orient(image_path)
-        
-        # 2. Resize (maintaining aspect ratio)
+        # 1. Resize (maintain aspect ratio)
         img = self._smart_resize(img)
         
-        # 3. Quality optimization
+        # 2. Quality optimization
         img = self._optimize_quality(img)
         
-        return img
+        # 3. Apply filters
+        img = self._apply_filters(img)
+        
+
+        if len(img.shape) == 3:
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        return Image.fromarray(img)
 
     def _load_and_orient(self, image_path):
-            """Load image and handle orientation (EXIF)"""
-            img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-            
-            try:
-                from PIL import Image, ExifTags
-                pil_img = Image.open(image_path)
-                for orientation in ExifTags.TAGS.keys():
-                    if ExifTags.TAGS[orientation] == 'Orientation':
-                        break
-                exif = dict(pil_img._getexif().items())
+        """Load image and handle orientation (EXIF)"""
+        img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
+        
+        try:
+            from PIL import Image, ExifTags
+            pil_img = Image.open(image_path)
+            if hasattr(pil_img, '_getexif'):
+                exif = pil_img._getexif()
+                if exif is not None:
+                    for orientation in ExifTags.TAGS.keys():
+                        if ExifTags.TAGS[orientation] == 'Orientation':
+                            break
+                    if orientation in exif:
+                        if exif[orientation] == 3:
+                            img = cv2.rotate(img, cv2.ROTATE_180)
+                        elif exif[orientation] == 6:
+                            img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+                        elif exif[orientation] == 8:
+                            img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        except (AttributeError, KeyError, IndexError):
+            pass
                 
-                if exif[orientation] == 3:
-                    img = cv2.rotate(img, cv2.ROTATE_180)
-                elif exif[orientation] == 6:
-                    img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-                elif exif[orientation] == 8:
-                    img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-            except:
-                pass
-                
-            return img
+        return img
         
     def _smart_resize(self, img):
         """Resize maintaining aspect ratio without upscaling"""
@@ -78,7 +91,12 @@ class ImagePreprocessor:
         return img
     
     def _optimize_quality(self, img):
-        # Convert to LAB color space for brightness adjustment
+        """Optimize image quality with contrast enhancement and sharpening"""
+
+        if len(img.shape) == 2:
+            return img
+            
+
         lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         
@@ -95,31 +113,36 @@ class ImagePreprocessor:
         
         return img
  
-    
-    
     def _apply_filters(self, image):
-        """Step 4: Apply various filters"""
-       
-        img_float = image.astype('float32') / 255.0
+        """Apply various filters to the image"""
+        # Convert to float32 for processing
+        if len(image.shape) == 2:
+            # Handle grayscale images
+            img_float = image.astype('float32') / 255.0
+            blurred = gaussian(img_float, sigma=self.gaussian_sigma)
+            sharpened = img_float + (img_float - blurred) * 1.5
+            filtered = median(sharpened, np.ones((self.mean_kernel_size, self.mean_kernel_size)))
+        else:
+            # Handle color images
+            img_float = image.astype('float32') / 255.0
+            blurred = gaussian(img_float, sigma=self.gaussian_sigma, channel_axis=-1)
+            sharpened = img_float + (img_float - blurred) * 1.5
+            
+            # Median filtering for noise reduction
+            filtered = np.zeros_like(sharpened)
+            for i in range(3):  # Apply to each channel
+                filtered[:,:,i] = median(sharpened[:,:,i], 
+                                       np.ones((self.mean_kernel_size, self.mean_kernel_size)))
         
-
-        blurred = gaussian(img_float, sigma=self.gaussian_sigma, 
-                          multichannel=True)
-        sharpened = img_float + (img_float - blurred) * 1.5  # Sharpening factor
-        
-        # 4.2 Mean filtering for noise reduction
-        # Using median filter instead of mean for better noise reduction
-        filtered = np.zeros_like(sharpened)
-        for i in range(3):  # Apply to each channel
-            filtered[:,:,i] = median(sharpened[:,:,i], 
-                                   np.ones((self.mean_kernel_size, self.mean_kernel_size)))
-        
-
+        # Clip values to 0-1 range
         filtered = np.clip(filtered, 0, 1)
         
-        # 4.3 Normalization (per channel)
-        for i in range(3):
-            channel = filtered[:,:,i]
-            filtered[:,:,i] = (channel - np.min(channel)) / (np.max(channel) - np.min(channel) + 1e-7)
+        # Normalization (per channel)
+        if len(filtered.shape) == 3:
+            for i in range(filtered.shape[2]):
+                channel = filtered[:,:,i]
+                filtered[:,:,i] = (channel - np.min(channel)) / (np.max(channel) - np.min(channel) + 1e-7)
+        else:
+            filtered = (filtered - np.min(filtered)) / (np.max(filtered) - np.min(filtered) + 1e-7)
         
         return (filtered * 255).astype('uint8')
