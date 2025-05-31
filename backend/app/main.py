@@ -29,7 +29,7 @@ async def analyze_image(image: UploadFile = File(...)):
         result = await MainAgent().analyze(img)
         if "error" in result:
             logging.error(f"Unexpected error: {result['error']}", exc_info=True)
-            raise HTTPException(500, "Internal Server Error")
+            raise HTTPException(400, "There was a problem while the image was being processed")
             
         return JSONResponse(result)
         
