@@ -3,10 +3,9 @@ from PIL import Image
 import asyncio
 from . import OCRAgent, NSFWAgent, ToxicityAgent
 from app.helpers import ImagePreprocessor
-from langchain_community.llms import Ollama
-from langchain.prompts import PromptTemplate
 from typing import Dict, Any
-import json
+from groq import Groq
+import os
 
 
 class MainAgent:
@@ -76,43 +75,74 @@ class MainAgent:
 
     def _prepare_summary_data(self, analysis_data: Dict[str, Any]) -> str:
         """
-        Generates a human-readable safety summary from NSFW/text analysis results.
-
-        Args:
-            analysis_data: The combined image/text analysis output
-
-        Returns:
-            str: Concise summary paragraph highlighting risks without JSON formatting
+        Generates an accurate safety summary based on toxicity analysis results.
         """
-        llm = Ollama(model="mistral")
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-        # Convert analysis_data to string and escape curly braces to prevent variable interpretation
-        analysis_str = json.dumps(analysis_data, indent=2).replace(
-            "{", "{{").replace("}", "}}")
+        # Extract text analysis data with proper defaults
+        text_analysis = analysis_data.get("text_analysis", {})
+        is_toxic = text_analysis.get("is_toxic", False)
+        confidence = text_analysis.get("confidence", 0)
+        categories = text_analysis.get("categories", [])
+        offensive_words = text_analysis.get("offensive_words", [])
+        reasoning = text_analysis.get(
+            "reasoning", "No detailed reasoning provided")
 
-        template = """[INST] Analyze this content safety report and generate a concise 3-4 sentence paragraph summary. 
-        Highlight critical risks while being professional. Structure your response as a plain text paragraph only.
+        # Build the data description without backslashes
+        data_lines = [
+            "TEXT ANALYSIS RESULTS:",
+            f"- Toxicity Status: {'TOXIC' if is_toxic else 'Non-toxic'}",
+            f"- Confidence: {confidence:.0%}",
+            f"- Categories: {', '.join(categories) or 'None'}",
+            f"- Offensive Words Count: {len(offensive_words)}",
+            f"- Primary Reasoning: {reasoning}"
+        ]
+        
+        print(analysis_data)
+        data_description = '\n'.join(data_lines)
 
-        Focus on:
-        - Image rating and flagged categories
-        - Toxic text or offensive words
-        - Overall safety verdict
+        # Create instructions
+        toxicity_instruction = ("Highlight the concerning elements and recommend restriction."
+                                if is_toxic else
+                                "Note the content appears safe for most audiences.")
 
-        Provide ONLY the summary paragraph - no JSON, no formatting, no additional explanations.
-
-        Data:
-        {analysis_data}
-        [/INST]"""
-
-        prompt = PromptTemplate(
-            input_variables=["analysis_data"],
-            template=template
+        prompt = (
+            "<|im_start|>system\n"
+            "You are a content safety analyst. Generate a 3-sentence summary that:\n"
+            "1. Clearly states toxicity status\n"
+            "2. Identifies specific risks if toxic\n"
+            "3. Provides appropriate recommendations\n\n"
+            f"Key data:\n{data_description}\n\n"
+            "Instructions:\n"
+            "- Be factual and precise\n"
+            "- Never contradict the toxicity analysis\n"
+            f"- {toxicity_instruction}\n"
+            "<|im_start|>user\n"
+            "Generate the safety summary<|im_end|>\n"
+            "<|im_start|>assistant\n"
         )
 
-        chain = prompt | llm
-        result = chain.invoke({"analysis_data": analysis_str})
+        try:
+            response = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama3-70b-8192",
+                temperature=0.0,  # Use 0 for maximum consistency
+                max_tokens=200
+            )
 
-        return result.strip()
+            summary = response.choices[0].message.content
+
+            # Ensure the summary reflects the toxicity
+            if is_toxic:
+                if "non-toxic" in summary.lower():
+                    summary = f"TOXIC CONTENT WARNING: {summary}"
+                elif not any(word in summary.lower() for word in ["toxic", "violat", "concern", "risk"]):
+                    summary = f"TOXICITY DETECTED: {summary}"
+
+            return summary.strip()
+
+        except Exception as e:
+            return f"Safety evaluation error: {str(e)}"
 
     async def _run_ocr(self, image: Image.Image) -> str:
         try:
