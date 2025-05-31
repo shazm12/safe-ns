@@ -31,7 +31,6 @@ async def moderate(
                 logging.error(
                     f"Image processing error: {result['error']}", exc_info=True)
                 raise HTTPException(400, "Image processing failed")
-            print(result)
             return JSONResponse({"result": result})
 
         if image:
