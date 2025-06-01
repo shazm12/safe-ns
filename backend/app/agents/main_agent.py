@@ -187,7 +187,7 @@ class MainAgent:
                                 "Note the content appears safe for most audiences based on both text and image analysis.")
 
         prompt = (
-            "<|im_start|>system\n"
+            "[INST] <<SYS>>\n"
             "You are a content safety analyst. Generate a concise 5-6 sentence summary that:\n"
             "1. Clearly states overall safety status considering both text and images\n"
             "2. Identifies specific risks from either text or images if toxic\n"
@@ -199,10 +199,11 @@ class MainAgent:
             "- Mention if only one component (text or image) is problematic, please talk about only one component or category of text or image in specific that has high likelihood\n"
             "- If you do not get likelihood for certain categories of text or image, pick first two from the category list and elaborate more on it."
             "- For images, consider both flagged categories and visual cues\n"
-            f"- {toxicity_instruction}\n"
-            "<|im_start|>user\n"
-            "Generate the combined safety summary<|im_end|>\n"
-            "<|im_start|>assistant\n"
+            f"- {toxicity_instruction}\n",
+            f"<</SYS",
+            "[INST]\n"
+            "Generate the combined safety summary<[/INST]\n"
+            "[/INST]\n"
         )
 
         try:
