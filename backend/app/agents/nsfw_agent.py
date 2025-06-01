@@ -4,6 +4,7 @@ import io
 from typing import Dict, List
 from dotenv import load_dotenv
 import os
+import logging
 # Load environment variables from .env file
 load_dotenv()
 os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
@@ -60,37 +61,32 @@ class NSFWAgent:
             likelihood_name = ['UNKNOWN', 'VERY_UNLIKELY', 'UNLIKELY',
                                'POSSIBLE', 'LIKELY', 'VERY_LIKELY']
             likelihood_score = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
-            # Get flagged categories with confidence
+
             flagged = []
             for cat, config in self.categories.items():
                 level = getattr(safe, cat)
                 if level >= config['threshold']:
-                    flagged.append({
-                        'category': cat,
-                        'level': likelihood_name[level],
-                        'confidence': likelihood_score[level],
-                        'description': config['description']
-                    })
+                    flagged.append(cat)
 
-            # Get visual cues with confidence
             visual_cues = []
             for obj in object_response.localized_object_annotations:
                 if obj.score > 0.7:
-                    visual_cues.append({
-                        'name': obj.name,
-                        'confidence': obj.score
-                    })
+                    visual_cues.append(obj.name)
 
-            overall_confidence = 1.0
+            overall_confidence = 1.0  # Default for safe images
             if flagged:
-                overall_confidence = max(
-                    [item['confidence'] for item in flagged])
+                # Get max confidence from flagged categories
+                max_conf = 0.0
+                for cat in flagged:
+                    level = getattr(safe, cat)
+                    max_conf = max(max_conf, likelihood_score[level])
+                overall_confidence = max_conf
 
             return {
-                "is_toxic": "unsafe" if flagged else "safe",
+                "is_toxic": bool(flagged),
                 "confidence": overall_confidence,
-                "flagged_categories": flagged,
-                "visual_cues": visual_cues,
+                "flagged_categories": flagged,  # Just category names
+                "visual_cues": visual_cues,    # Just visual cue names
                 "details": {
                     cat: {
                         'level': likelihood_name[getattr(safe, cat)],
@@ -100,4 +96,5 @@ class NSFWAgent:
             }
 
         except Exception as e:
+            logging.error(e, exc_info=True)
             return {"error": str(e)}
