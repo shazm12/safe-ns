@@ -457,5 +457,7 @@ npm run dev
 ## Prompt Injection Detector
 This prompt injection detector checks user inputs for suspicious patterns that might try to manipulate AI systems. It looks for phrases that attempt to override instructions, execute commands, access sensitive data, or change system behavior. When it detects these red flags (like "ignore previous instructions" or code execution attempts), it raises an error to block the input. This helps prevent users from tricking AI systems into doing unintended things. The detector uses simple pattern matching to catch common attack methods.
 
+## CORS
+The CORS middleware has been added to FastAPI server with basic configurations, for more security we can add a proxy server like Nginx and add the origin and host of the proxy server which will get all the requests from client and redirect to the server. This is yet to be implemented.
 
 
