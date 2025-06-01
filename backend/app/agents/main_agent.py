@@ -116,7 +116,7 @@ class MainAgent:
             }
 
             summary = await self._prepare_summary_data(analysis_json)
-            
+
             return {"is_toxic": bool(text_result.get("is_toxic", False)), "confidence": float(text_result.get("confidence", 0)), "summary": summary}
 
         except Exception as e:
