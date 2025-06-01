@@ -6,6 +6,7 @@ from app.helpers import ImagePreprocessor
 from typing import Dict, Any
 from groq import Groq
 import os
+import logging
 
 
 class MainAgent:
@@ -13,7 +14,7 @@ class MainAgent:
     def __init__(self):
         self.ocr_agent = OCRAgent()
         self.nsfw_agent = NSFWAgent()
-        self.toxcity_agent = ToxicityAgent()
+        self.toxicity_agent = ToxicityAgent()
         self.imagePreprocessor = ImagePreprocessor()
 
     async def analyze_image(self, image: Image.Image) -> Dict:
@@ -31,19 +32,15 @@ class MainAgent:
             # Process text toxicity if text exists
             text_result = {}
             if ocr_text and "OCR Error" not in ocr_text:
-                text_result = self.toxcity_agent.analyze(ocr_text)
+                text_result = self.analyze_text(ocr_text)
+                text_analysis = text_result.text_analysis
 
             analysis_json = {
                 "image_analysis": nsfw_result,
-                "text_analysis": {
-                    "extracted_text": ocr_text,
-                    "is_toxic": text_result.get("is_toxic", False),
-                    "reasoning": text_result.get("reasoning", ""),
-                    "offensive_words": text_result.get("offensive_words", [])
-                },
+                "text_analysis": text_analysis,
                 "verdict": "unsafe" if (
                     nsfw_result.get("rating") == "unsafe" or
-                    text_result.get("is_toxic", False)
+                    text_analysis.get("is_toxic", False)
                 ) else "safe"
             }
 
@@ -52,72 +49,124 @@ class MainAgent:
             return summary
 
         except Exception as e:
+            logging.error(e, exc_info=True)
             return {"error": str(e)}
 
-    async def analyze_text(self, text):
+    async def analyze_text(self, text: str) -> str:
         try:
-            text_result = self.toxcity_agent.analyze(text)
+
+            text_result = self.toxicity_agent.analyze(text)
+            # Extract offensive words details
+            offensive_words = []
+            if isinstance(text_result.get("offensive_words"), list):
+                for word_info in text_result["offensive_words"]:
+                    if isinstance(word_info, dict):
+                        offensive_words.append(word_info.get("word", ""))
+                    elif isinstance(word_info, str):
+                        offensive_words.append({
+                            'word': word_info,
+                            'category': 'unknown',
+                            'severity': 'low'
+                        })
+
             analysis_json = {
-                "image_analysis": None,
+                "image_analysis": {},
                 "text_analysis": {
                     "extracted_text": text,
-                    "is_toxic": text_result.get("is_toxic", False),
-                    "reasoning": text_result.get("reasoning", ""),
-                    "offensive_words": text_result.get("offensive_words", [])
+                    "is_toxic": bool(text_result.get("is_toxic", False)),
+                    "confidence": float(text_result.get("confidence", 0)),
+                    "reasoning": str(text_result.get("reasoning", "No reasoning provided")),
+                    "categories": list(text_result.get("categories", [])),
+                    "offensive_words": offensive_words,
+                    "severity": str(text_result.get("severity", "low")).lower()
                 },
-                "verdict": "unsafe" if (
-                    text_result.get("is_toxic", False)
-                ) else "safe"
+                "verdict": "unsafe" if bool(text_result.get("is_toxic", False)) else "safe"
             }
-            return self._prepare_summary_data(analysis_json)
-        except Exception as e:
-            return {f"Text Analysis Error: {e}"}
 
-    def _prepare_summary_data(self, analysis_data: Dict[str, Any]) -> str:
+            return await self._prepare_summary_data(analysis_json)
+
+        except Exception as e:
+            logging.error(e, exc_info=True)
+            return f"Text Analysis Error: {str(e)}"
+
+    async def _prepare_summary_data(self, analysis_data: Dict[str, Any]) -> str:
         """
-        Generates an accurate safety summary based on toxicity analysis results.
+        Generates an accurate safety summary based on both text and image toxicity analysis results.
         """
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-        # Extract text analysis data with proper defaults
+        # Extract analysis data with proper defaults
         text_analysis = analysis_data.get("text_analysis", {})
-        is_toxic = text_analysis.get("is_toxic", False)
-        confidence = text_analysis.get("confidence", 0)
-        categories = text_analysis.get("categories", [])
-        offensive_words = text_analysis.get("offensive_words", [])
-        reasoning = text_analysis.get(
-            "reasoning", "No detailed reasoning provided")
+        image_analysis = analysis_data.get("image_analysis", {})
 
-        # Build the data description without backslashes
+        # Text analysis data
+        text_toxic = text_analysis.get("is_toxic", False)
+        text_confidence = text_analysis.get("confidence", 0)
+        text_categories = text_analysis.get("categories", [])
+        text_offensive_words = text_analysis.get("offensive_words", [])
+        text_reasoning = text_analysis.get(
+            "reasoning", "No detailed reasoning provided")
+        text_severity = text_analysis.get("severity", "low")
+
+        # Image analysis data
+        image_toxic = image_analysis.get("is_toxic", False)
+        image_confidence = image_analysis.get("confidence", 0)
+        image_flagged_categories = image_analysis.get("flagged_categories", [])
+        image_all_categories = image_analysis.get(
+            "details", {}).keys() if image_analysis.get("details") else []
+        image_reasoning = image_analysis.get(
+            "reasoning", "No detailed reasoning provided")
+        image_severity = image_analysis.get("severity", "low")
+        image_visual_cues = image_analysis.get("visual_cues", [])
+
+        # Build the combined data description with properly mapped categories
         data_lines = [
-            "TEXT ANALYSIS RESULTS:",
-            f"- Toxicity Status: {'TOXIC' if is_toxic else 'Non-toxic'}",
-            f"- Confidence: {confidence:.0%}",
-            f"- Categories: {', '.join(categories) or 'None'}",
-            f"- Offensive Words Count: {len(offensive_words)}",
-            f"- Primary Reasoning: {reasoning}"
+            "CONTENT SAFETY ANALYSIS SUMMARY:",
+            "\nTEXT ANALYSIS:",
+            f"- Toxicity Status: {'TOXIC' if text_toxic else 'Non-toxic'}",
+            f"- Confidence: {text_confidence:.0%}",
+            f"- Categories: {', '.join(text_categories) or 'None'}",
+            f"- Offensive Words Count: {len(text_offensive_words)}",
+            f"- Severity: {text_severity.upper()}",
+            f"- Reasoning: {text_reasoning}",
+
+            "\nIMAGE ANALYSIS:",
+            f"- Toxicity Status: {'TOXIC' if image_toxic else 'Non-toxic'}",
+            f"- Confidence: {image_confidence:.0%}",
+            f"- Flagged Categories: {', '.join(image_flagged_categories) or 'None'}",
+            f"- All Categories Checked: {', '.join(image_all_categories) or 'None'}",
+            f"- Visual Cues: {', '.join([str(cue) for cue in image_visual_cues]) or 'None'}",
+            f"- Severity: {image_severity.upper()}",
+            f"- Reasoning: {image_reasoning}"
         ]
 
         data_description = '\n'.join(data_lines)
 
-        # Create instructions
-        toxicity_instruction = ("Highlight the concerning elements and recommend restriction."
-                                if is_toxic else
-                                "Note the content appears safe for most audiences.")
+        # Determine overall toxicity
+        overall_toxic = text_toxic or image_toxic
+        overall_confidence = max(text_confidence, image_confidence)
+
+        # Create instructions based on combined analysis
+        toxicity_instruction = ("Highlight all concerning elements from both text and image analysis and recommend appropriate restrictions."
+                                if overall_toxic else
+                                "Note the content appears safe for most audiences based on both text and image analysis.")
 
         prompt = (
             "<|im_start|>system\n"
-            "You are a content safety analyst. Generate a 3-sentence summary that:\n"
-            "1. Clearly states toxicity status\n"
-            "2. Identifies specific risks if toxic\n"
-            "3. Provides appropriate recommendations\n\n"
+            "You are a content safety analyst. Generate a concise 5-6 sentence summary that:\n"
+            "1. Clearly states overall safety status considering both text and images\n"
+            "2. Identifies specific risks from either text or images if toxic\n"
+            "3. Provides appropriate recommendations based on combined analysis\n\n"
             f"Key data:\n{data_description}\n\n"
             "Instructions:\n"
-            "- Be factual and precise\n"
+            "- Be factual and precise about both text and image findings\n"
             "- Never contradict the toxicity analysis\n"
+            "- Mention if only one component (text or image) is problematic, please talk about only one component or category of text or image in specific that has high likelihood\n"
+            "- If you do not get likelihood for certain categories of text or image, pick first two from the category list and elaborate more on it."
+            "- For images, consider both flagged categories and visual cues\n"
             f"- {toxicity_instruction}\n"
             "<|im_start|>user\n"
-            "Generate the safety summary<|im_end|>\n"
+            "Generate the combined safety summary<|im_end|>\n"
             "<|im_start|>assistant\n"
         )
 
@@ -126,31 +175,39 @@ class MainAgent:
                 messages=[{"role": "user", "content": prompt}],
                 model="llama3-70b-8192",
                 temperature=0.0,  # Use 0 for maximum consistency
-                max_tokens=200
+                max_tokens=250  # Slightly more tokens for combined analysis
             )
 
             summary = response.choices[0].message.content
 
-            # Ensure the summary reflects the toxicity
-            if is_toxic:
+            # Ensure the summary reflects the toxicity appropriately
+            if overall_toxic:
                 if "non-toxic" in summary.lower():
                     summary = f"TOXIC CONTENT WARNING: {summary}"
-                elif not any(word in summary.lower() for word in ["toxic", "violat", "concern", "risk"]):
+                elif not any(word in summary.lower() for word in ["toxic", "violent", "concern", "risk", "inappropriate"]):
                     summary = f"TOXICITY DETECTED: {summary}"
+
+                # Add clarification if only one component is toxic
+                if text_toxic != image_toxic:
+                    problematic_component = "text" if text_toxic else "image"
+                    summary = f"{problematic_component.upper()}-SPECIFIC ISSUE: {summary}"
 
             return summary.strip()
 
         except Exception as e:
+            logging.error(e, exc_info=True)
             return f"Safety evaluation error: {str(e)}"
 
     async def _run_ocr(self, image: Image.Image) -> str:
         try:
             return self.ocr_agent.extract_text(image)
         except Exception as e:
+            logging.error(e, exc_info=True)
             return f"OCR Error: {str(e)}"
 
     async def _run_nsfw(self, image: Image.Image) -> Dict:
         try:
             return self.nsfw_agent.detect(image)
         except Exception as e:
+            logging.error(e, exc_info=True)
             return {"rating": "error", "error": str(e)}
