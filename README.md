@@ -341,3 +341,8 @@ npm install
 ```bash
 npm run dev
 ```
+## Step 6: Update the Environment Variables
+
+- Create a `.env.local` file(sample given to copy)
+
+- Then change the API_URL to the URL of the locally running backend service.
