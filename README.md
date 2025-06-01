@@ -240,8 +240,8 @@ sudo dnf install tesseract tesseract-devel
 ## Step 2: Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd <your-repository-name>
+git clone https://github.com/shazm12/repello-task.git
+cd repello-task
 ```
 
 ## Step 3: Navigate to Backend Directory
