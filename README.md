@@ -301,6 +301,75 @@ The server will be available at:
 - API Documentation: http://127.0.0.1:8000/docs
 
 
+# Setting up Groq AI and Google Cloud Vision
+
+Note: use the sample .env.copy file to create your .env file.
+
+## Groq AI
+
+1. Sign Up on the GROQ Website
+    Visit [GROQ's official website](https://groq.com/) (or their developer portal if available).
+
+    Look for a "Sign Up" or "Get API Key" option.
+        <br />
+
+2. Access the API Key Section
+    Once logged in, navigate to the API Keys section (usually found in the account dashboard or developer settings).
+
+    <br />
+
+3. Generate a New API Key
+    Click on "Create API Key" or a similar button.
+
+    Give the key a name (e.g., "My Project").
+
+    Copy the generated key immediately (it may not be shown again).
+   
+    <br />
+
+4. Set the Groq API key in the .env file in backend with GROQ_API_KEY.
+
+## Google Cloud Vision API
+Step 1: Set Up a Google Cloud Project
+        - Go to Google Cloud Console
+        - Visit Google Cloud Console.
+        - Sign in with your Google account.
+        - Create a New Project
+        - Click on the project dropdown (top-left) → "New Project".
+        - Enter a Project Name (e.g., "VisionAPIDemo").
+        - Click "Create".
+
+Step 2: Enable the Google Vision API
+        - Open the API Library
+        - From the left sidebar, go to "APIs & Services" → "Library".
+        - Search for "Cloud Vision API"
+        - Type "Cloud Vision API" in the search bar.
+        - Click on the API from the results.
+        - Enable the API
+        - Click the "Enable" button.
+
+Step 3: Create a Service Account
+        - Go to API An Services from sidebar or search.
+        - Go to credentials.
+        - Click on manage servie account.
+        - Click on create new service account.
+        - Optional: Add a description.
+        - Click "Create and Continue".
+
+Step 4: Assign Roles
+    - Under "Grant this service account access to project", assign roles:
+    - Select "Basic" → "Viewer" (minimum).
+    - For full access, choose "Project" → "Owner" (not recommended for -        security).
+    - Click "Continue".
+    - Generate a JSON Key
+    - Under "Grant users access to this service account", skip (unless needed).
+    - Click "Done".
+    - Now, find your service account in the list → Click the three dots (⋮) → - "Manage Keys".
+    - Click "Add Key" → "Create New Key".
+    - Select JSON → Click "Create".
+    - The key file (service-account-key.json) will download automatically.
+    - Store it locally and mention the location of the file in .env under GOOGLE_APPLICATION_CREDENTIALS.
+
 # Next.js Frontend Setup Guide
 
 This guide will help you set up the Next.js frontend application for the project.
