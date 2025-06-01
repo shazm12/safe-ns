@@ -60,10 +60,10 @@
 flowchart TD
     A[Image/Text Input] --> B[Main Agent]
     B --> |Text| F
-    B --> |Image| C[OCR Agent\nText Extraction]
-    B --> |Image| D[NSFW Detection Agent\nVisual Content Check]
+    B --> |Image| C[OCR Agent Text Extraction]
+    B --> |Image| D[NSFW Detection Agent Visual Content Check]
     C --> E{Text Found?}
-    E -->|Yes| F[Toxicity Agent\nOffensive Language Check]
+    E -->|Yes| F[Toxicity Agent Offensive Language Check]
     E -->|No| G[No Text Analysis]
     D --> H
     G --> H
@@ -289,10 +289,10 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 
 ```bash
 # Basic run
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 
 # Run with custom host and port
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The server will be available at:
@@ -457,5 +457,7 @@ npm run dev
 ## Prompt Injection Detector
 This prompt injection detector checks user inputs for suspicious patterns that might try to manipulate AI systems. It looks for phrases that attempt to override instructions, execute commands, access sensitive data, or change system behavior. When it detects these red flags (like "ignore previous instructions" or code execution attempts), it raises an error to block the input. This helps prevent users from tricking AI systems into doing unintended things. The detector uses simple pattern matching to catch common attack methods.
 
+## CORS
+The CORS middleware has been added to FastAPI server with basic configurations, for more security we can add a proxy server like Nginx and add the origin and host of the proxy server which will get all the requests from client and redirect to the server. This is yet to be implemented.
 
 
