@@ -1,6 +1,5 @@
 from groq import Groq
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from typing import Dict, List
 import json
 from dotenv import load_dotenv
@@ -11,6 +10,7 @@ load_dotenv()
 
 class ToxicityAgent:
     def __init__(self, model_name: str = "llama3-70b-8192"):
+        
         # Initialize Groq client
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model_name = model_name
@@ -77,7 +77,7 @@ class ToxicityAgent:
 
             # Validate output
             return {
-                 
+
                 "is_toxic": bool(data.get("is_toxic", False)),
                 "confidence": max(0.0, min(1.0, float(data.get("confidence", 0.0)))),
                 "categories": [
@@ -90,7 +90,7 @@ class ToxicityAgent:
                 ],
                 "severity": data.get("severity", "low"),
                 "model": self.model_name
-            
+
             }
 
         except Exception as e:
