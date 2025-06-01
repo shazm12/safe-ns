@@ -1,4 +1,5 @@
 ## Started at 12 am 31st May.
+# Task:Multi-Modal Content Moderator (Image & Text) (Mid Weightage in Evaluation)
 
 # Overview
 
