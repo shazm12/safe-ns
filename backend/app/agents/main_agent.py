@@ -46,6 +46,12 @@ class MainAgent:
                                 'severity': 'low'
                             })
 
+            overall_safeness = nsfw_result.get(
+                "is_toxic", False) or text_result.get("is_toxic", False)
+
+            overall_confidence = max(nsfw_result.get(
+                "confidence", 0), text_result.get("confidence", 0))
+
             analysis_json = {
                 "image_analysis": nsfw_result,
                 "text_analysis": {
@@ -57,15 +63,12 @@ class MainAgent:
                     "offensive_words": offensive_words,
                     "severity": str(text_result.get("severity", "low")).lower()
                 },
-                "verdict": "unsafe" if (
-                    nsfw_result.get("rating") == "unsafe" or
-                    text_result.get("is_toxic", False)
-                ) else "safe"
+                "verdict": overall_safeness
             }
 
             summary = await self._prepare_summary_data(analysis_json)
 
-            return summary
+            return {"is_toxic": overall_safeness, "confidence": float(overall_confidence), "summary": summary}
 
         except Exception as e:
             logging.error(e, exc_info=True)
@@ -102,7 +105,9 @@ class MainAgent:
                 "verdict": "unsafe" if bool(text_result.get("is_toxic", False)) else "safe"
             }
 
-            return await self._prepare_summary_data(analysis_json)
+            summary = await self._prepare_summary_data(analysis_json)
+
+            return {"is_toxic": bool(text_result.get("is_toxic", False)), "confidence": float(text_result.get("confidence", 0)), "summary": summary}
 
         except Exception as e:
             logging.error(e, exc_info=True)
