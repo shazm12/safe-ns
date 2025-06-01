@@ -74,8 +74,6 @@ class MainAgent:
             }
 
             summary = await self._prepare_summary_data(analysis_json)
-            error = summary.get("error", {})
-            
             return {"is_toxic": overall_safeness, "confidence": float(overall_confidence), "summary": summary}
 
         except Exception as e:
