@@ -266,6 +266,8 @@ source venv/bin/activate
 
 ## Step 5: Install Dependencies
 
+In the root of backend directory, there is requirement.txt provided, you can use it with this command below:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -347,3 +349,12 @@ npm run dev
 - Create a `.env.local` file(sample given to copy)
 
 - Then change the API_URL to the URL of the locally running backend service.
+
+
+# Secruity and Measures
+--- 
+## Prompt Injection Detector
+This prompt injection detector checks user inputs for suspicious patterns that might try to manipulate AI systems. It looks for phrases that attempt to override instructions, execute commands, access sensitive data, or change system behavior. When it detects these red flags (like "ignore previous instructions" or code execution attempts), it raises an error to block the input. This helps prevent users from tricking AI systems into doing unintended things. The detector uses simple pattern matching to catch common attack methods.
+
+
+
