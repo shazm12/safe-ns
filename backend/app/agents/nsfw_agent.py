@@ -59,8 +59,8 @@ class NSFWAgent:
             safe = safe_response.safe_search_annotation
             likelihood_name = ['UNKNOWN', 'VERY_UNLIKELY', 'UNLIKELY',
                                'POSSIBLE', 'LIKELY', 'VERY_LIKELY']
-
-            # Get flagged categories
+            likelihood_score = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9]
+            # Get flagged categories with confidence
             flagged = []
             for cat, config in self.categories.items():
                 level = getattr(safe, cat)
@@ -68,22 +68,34 @@ class NSFWAgent:
                     flagged.append({
                         'category': cat,
                         'level': likelihood_name[level],
+                        'confidence': likelihood_score[level],
                         'description': config['description']
                     })
 
-            # Get visual cues
-            visual_cues = list({
-                obj.name for obj in object_response.localized_object_annotations
-                if obj.score > 0.7
-            })
+            # Get visual cues with confidence
+            visual_cues = []
+            for obj in object_response.localized_object_annotations:
+                if obj.score > 0.7:
+                    visual_cues.append({
+                        'name': obj.name,
+                        'confidence': obj.score
+                    })
+
+            overall_confidence = 1.0
+            if flagged:
+                overall_confidence = max(
+                    [item['confidence'] for item in flagged])
 
             return {
-                "rating": "unsafe" if flagged else "safe",
+                "is_toxic": "unsafe" if flagged else "safe",
+                "confidence": overall_confidence,
                 "flagged_categories": flagged,
                 "visual_cues": visual_cues,
                 "details": {
-                    cat: likelihood_name[getattr(safe, cat)]
-                    for cat in self.categories
+                    cat: {
+                        'level': likelihood_name[getattr(safe, cat)],
+                        'confidence': likelihood_score[getattr(safe, cat)]
+                    } for cat in self.categories
                 }
             }
 
