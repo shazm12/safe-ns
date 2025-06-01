@@ -143,6 +143,7 @@ Hence, i figured I should work on doing some image preprocessing before sending 
 
 1. Compress very high resolution images for saving cost.😅
 2. Improve blurry ,very low res and darker images using OpenCV.
+3. Improve contours, edges and sharpness of objects in images for better recognition.
 
 ## Reference
 
