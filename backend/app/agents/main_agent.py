@@ -32,19 +32,38 @@ class MainAgent:
             # Process text toxicity if text exists
             text_result = {}
             if ocr_text and "OCR Error" not in ocr_text:
-                text_result = self.analyze_text(ocr_text)
-                text_analysis = text_result.text_analysis
+                text_result = self.toxicity_agent.analyze(ocr_text)
+                # Extract offensive words details
+                offensive_words = []
+                if isinstance(text_result.get("offensive_words"), list):
+                    for word_info in text_result["offensive_words"]:
+                        if isinstance(word_info, dict):
+                            offensive_words.append(word_info.get("word", ""))
+                        elif isinstance(word_info, str):
+                            offensive_words.append({
+                                'word': word_info,
+                                'category': 'unknown',
+                                'severity': 'low'
+                            })
 
             analysis_json = {
                 "image_analysis": nsfw_result,
-                "text_analysis": text_analysis,
+                "text_analysis": {
+                    "extracted_text": ocr_text,
+                    "is_toxic": bool(text_result.get("is_toxic", False)),
+                    "confidence": float(text_result.get("confidence", 0)),
+                    "reasoning": str(text_result.get("reasoning", "No reasoning provided")),
+                    "categories": list(text_result.get("categories", [])),
+                    "offensive_words": offensive_words,
+                    "severity": str(text_result.get("severity", "low")).lower()
+                },
                 "verdict": "unsafe" if (
                     nsfw_result.get("rating") == "unsafe" or
-                    text_analysis.get("is_toxic", False)
+                    text_result.get("is_toxic", False)
                 ) else "safe"
             }
 
-            summary = self._prepare_summary_data(analysis_json)
+            summary = await self._prepare_summary_data(analysis_json)
 
             return summary
 
