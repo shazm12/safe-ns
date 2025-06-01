@@ -1,12 +1,12 @@
 "use server";
-import { ModerationType, ModeratedContent } from "@/lib/types";
+import { ModerationType, ModerationResponnse } from "@/lib/types";
 
 const API_URL = process.env.API_URL!;
 
 export async function moderateContent(
   type: ModerationType,
   content: string | File
-): Promise<Object> {
+): Promise<ModerationResponnse> {
   try {
     let response;
     const formData = new FormData();
