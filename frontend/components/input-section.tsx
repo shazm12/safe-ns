@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Upload, Send, Loader2, Image as ImageIcon } from 'lucide-react';
-import { ModerationType } from '@/lib/types';
+import { useState, useRef } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Upload, Send, Loader2, Image as ImageIcon } from "lucide-react";
+import { ModerationType } from "@/lib/types";
 
 interface InputSectionProps {
   onSubmit: (type: ModerationType, content: string | File) => void;
@@ -14,7 +14,7 @@ interface InputSectionProps {
 }
 
 export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
-  const [text, setText] = useState('');
+  const [text, setText] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -22,14 +22,14 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
   const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim()) {
-      onSubmit('text', text);
+      onSubmit("text", text);
     }
   };
 
   const handleImageSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedImage) {
-      onSubmit('image', selectedImage);
+      onSubmit("image", selectedImage);
     }
   };
 
@@ -37,7 +37,7 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
-      createBlurredPreview(file).then(blurredUrl => {
+      createBlurredPreview(file).then((blurredUrl) => {
         setImagePreview(blurredUrl);
       });
     }
@@ -54,9 +54,9 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setSelectedImage(file);
-      createBlurredPreview(file).then(blurredUrl => {
+      createBlurredPreview(file).then((blurredUrl) => {
         setImagePreview(blurredUrl);
       });
     }
@@ -66,29 +66,29 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
     return new Promise((resolve) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
-      
+
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
         // Reduce size for faster blurring
         const scale = 0.2;
         canvas.width = img.width * scale;
         canvas.height = img.height * scale;
-        
+
         if (ctx) {
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          
+
           // Apply blur effect
-          ctx.filter = 'blur(8px)';
+          ctx.filter = "blur(10px)";
           ctx.drawImage(canvas, 0, 0);
-          
+
           // Convert back to data URL
-          const blurredUrl = canvas.toDataURL('image/jpeg', 0.7);
+          const blurredUrl = canvas.toDataURL("image/jpeg", 0.7);
           resolve(blurredUrl);
         }
       };
-      
+
       img.src = url;
     });
   };
@@ -99,7 +99,7 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
         <TabsTrigger value="text">Text</TabsTrigger>
         <TabsTrigger value="image">Image</TabsTrigger>
       </TabsList>
-      
+
       <TabsContent value="text">
         <form onSubmit={handleTextSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -113,48 +113,48 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
               disabled={isAnalyzing}
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={!text.trim() || isAnalyzing}
             className="w-full sm:w-auto"
           >
             {isAnalyzing ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Analyzing...
               </>
             ) : (
               <>
-                <Send className="mr-2 h-4 w-4" /> 
+                <Send className="mr-2 h-4 w-4" />
                 Check Content
               </>
             )}
           </Button>
         </form>
       </TabsContent>
-      
+
       <TabsContent value="image">
         <form onSubmit={handleImageSubmit} className="space-y-4">
-          <div 
+          <div
             className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             onClick={handleBrowseClick}
           >
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/*" 
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
               onChange={handleImageChange}
               disabled={isAnalyzing}
             />
-            
+
             {imagePreview ? (
               <div className="relative">
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
+                <img
+                  src={imagePreview}
+                  alt="Preview"
                   className="max-h-[250px] mx-auto rounded-md object-contain"
                 />
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
@@ -175,20 +175,20 @@ export function InputSection({ onSubmit, isAnalyzing }: InputSectionProps) {
               </div>
             )}
           </div>
-          
-          <Button 
-            type="submit" 
+
+          <Button
+            type="submit"
             disabled={!selectedImage || isAnalyzing}
             className="w-full sm:w-auto"
           >
             {isAnalyzing ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Analyzing...
               </>
             ) : (
               <>
-                <Upload className="mr-2 h-4 w-4" /> 
+                <Upload className="mr-2 h-4 w-4" />
                 Check Image
               </>
             )}
