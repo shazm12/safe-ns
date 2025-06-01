@@ -97,8 +97,7 @@ class MainAgent:
             f"- Offensive Words Count: {len(offensive_words)}",
             f"- Primary Reasoning: {reasoning}"
         ]
-        
-        print(analysis_data)
+
         data_description = '\n'.join(data_lines)
 
         # Create instructions
