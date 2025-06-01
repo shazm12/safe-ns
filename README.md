@@ -60,10 +60,10 @@
 flowchart TD
     A[Image/Text Input] --> B[Main Agent]
     B --> |Text| F
-    B --> |Image| C[OCR Agent\nText Extraction]
-    B --> |Image| D[NSFW Detection Agent\nVisual Content Check]
+    B --> |Image| C[OCR Agent Text Extraction]
+    B --> |Image| D[NSFW Detection Agent Visual Content Check]
     C --> E{Text Found?}
-    E -->|Yes| F[Toxicity Agent\nOffensive Language Check]
+    E -->|Yes| F[Toxicity Agent Offensive Language Check]
     E -->|No| G[No Text Analysis]
     D --> H
     G --> H
