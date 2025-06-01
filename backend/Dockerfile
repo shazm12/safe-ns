@@ -42,10 +42,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Copy the service acccount json file
-COPY url-shortener-api-450218-07b5d589c515.json . 
-
-# COPY env variables
-# COPY .env .env
+# COPY your-google-service-account.json . 
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app
