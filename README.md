@@ -331,43 +331,75 @@ Note: use the sample .env.copy file to create your .env file.
 
 ## Google Cloud Vision API
 Step 1: Set Up a Google Cloud Project
+       
         - Go to Google Cloud Console
+        
         - Visit Google Cloud Console.
+        
         - Sign in with your Google account.
+        
         - Create a New Project
+        
         - Click on the project dropdown (top-left) → "New Project".
+        
         - Enter a Project Name (e.g., "VisionAPIDemo").
+        
         - Click "Create".
 
 Step 2: Enable the Google Vision API
+        
         - Open the API Library
+        
         - From the left sidebar, go to "APIs & Services" → "Library".
+        
         - Search for "Cloud Vision API"
+        
         - Type "Cloud Vision API" in the search bar.
+        
         - Click on the API from the results.
+        
         - Enable the API
+        
         - Click the "Enable" button.
 
 Step 3: Create a Service Account
+        
         - Go to API An Services from sidebar or search.
+        
         - Go to credentials.
+        
         - Click on manage servie account.
+        
         - Click on create new service account.
+        
         - Optional: Add a description.
+        
         - Click "Create and Continue".
 
 Step 4: Assign Roles
+    
     - Under "Grant this service account access to project", assign roles:
+    
     - Select "Basic" → "Viewer" (minimum).
-    - For full access, choose "Project" → "Owner" (not recommended for -        security).
+    
+    - For full access, choose "Project" → "Owner" (not recommended for - security).
+    
     - Click "Continue".
+    
     - Generate a JSON Key
+    
     - Under "Grant users access to this service account", skip (unless needed).
+    
     - Click "Done".
+    
     - Now, find your service account in the list → Click the three dots (⋮) → - "Manage Keys".
+    
     - Click "Add Key" → "Create New Key".
+    
     - Select JSON → Click "Create".
+    
     - The key file (service-account-key.json) will download automatically.
+    
     - Store it locally and mention the location of the file in .env under GOOGLE_APPLICATION_CREDENTIALS.
 
 # Next.js Frontend Setup Guide
