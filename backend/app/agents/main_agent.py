@@ -87,7 +87,7 @@ class MainAgent:
                 text)
             if (is_prompt_injection):
                 raise ValueError("Possible Prompt Injection")
-            
+
             text_result = self.toxicity_agent.analyze(text)
             # Extract offensive words details
             offensive_words = []
@@ -122,7 +122,7 @@ class MainAgent:
 
         except Exception as e:
             logging.error(e, exc_info=True)
-            return f"Text Analysis Error: {str(e)}"
+            return {"error": f"Text Analysis Error: {str(e)}"}
 
     async def _prepare_summary_data(self, analysis_data: Dict[str, Any]) -> str:
         """
@@ -231,14 +231,14 @@ class MainAgent:
 
         except Exception as e:
             logging.error(e, exc_info=True)
-            return f"Safety evaluation error: {str(e)}"
+            return {"error": f"Safety evaluation error: {str(e)}"}
 
     async def _run_ocr(self, image: Image.Image) -> str:
         try:
             return self.ocr_agent.extract_text(image)
         except Exception as e:
             logging.error(e, exc_info=True)
-            return f"OCR Error: {str(e)}"
+            return {"error": f"OCR Error: {str(e)}"}
 
     async def _run_nsfw(self, image: Image.Image) -> Dict:
         try:
