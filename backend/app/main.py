@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError
 import io
@@ -9,6 +10,15 @@ from typing import Union, Optional
 from .agents import MainAgent
 
 app = FastAPI()
+
+# Add CORS middleware - Allow all origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 
 class TextRequest(BaseModel):
@@ -31,7 +41,7 @@ async def moderate(
                 logging.error(
                     f"Text processing error: {result['error']}", exc_info=True)
                 raise HTTPException(400, "Image processing failed")
-            
+
             return JSONResponse({"result": result})
 
         if image:
