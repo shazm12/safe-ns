@@ -74,6 +74,8 @@ class MainAgent:
             }
 
             summary = await self._prepare_summary_data(analysis_json)
+            if (summary.error):
+                return {"error": error}
 
             return {"is_toxic": overall_safeness, "confidence": float(overall_confidence), "summary": summary}
 
@@ -117,6 +119,8 @@ class MainAgent:
             }
 
             summary = await self._prepare_summary_data(analysis_json)
+            if (summary.error):
+                return {"error": error}
 
             return {"is_toxic": bool(text_result.get("is_toxic", False)), "confidence": float(text_result.get("confidence", 0)), "summary": summary}
 
@@ -200,9 +204,9 @@ class MainAgent:
             "- If you do not get likelihood for certain categories of text or image, pick first two from the category list and elaborate more on it."
             "- For images, consider both flagged categories and visual cues\n"
             f"- {toxicity_instruction}\n",
-            "<</SYS>>",
-            "Generate the combined safety summary<[/INST]\n"
-            "[/INST]\n"
+            "[/INST]<</SYS>>",
+            "[INST]"
+            "Generate the combined safety summary[/INST]\n"
         )
 
         try:
