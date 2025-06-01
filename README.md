@@ -289,10 +289,10 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 
 ```bash
 # Basic run
-uvicorn main:app --reload
+uvicorn app.main:app --reload
 
 # Run with custom host and port
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The server will be available at:
