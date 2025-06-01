@@ -7,12 +7,18 @@ import os
 import logging
 # Load environment variables from .env file
 load_dotenv()
-os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+# Recommended: Service Acccounts
+#os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 
 class NSFWAgent:
     def __init__(self):
-        self.client = vision.ImageAnnotatorClient()
+        self.client = vision.ImageAnnotatorClient(
+                    client_options={"api_key": GOOGLE_API_KEY}
+                )
 
         self.categories = {
             'adult': {
