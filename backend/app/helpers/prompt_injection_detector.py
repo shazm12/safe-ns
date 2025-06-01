@@ -23,7 +23,7 @@ class PromptInjectionDetector:
             "hack", "unauthorized", "confidential", "proprietary"
         ]
 
-    def is_injection(self, text: str, threshold: float = 0.7) -> bool:
+    def is_injection(self, text: str, threshold: float = 0.6) -> bool:
         """Check if text contains prompt injection attempts."""
         if not text.strip():
             return False
@@ -41,5 +41,6 @@ class PromptInjectionDetector:
 
         if len(text) > 1000:
             score += 0.2
+        
 
         return (score >= threshold)

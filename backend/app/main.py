@@ -29,7 +29,7 @@ async def moderate(
             result = await MainAgent().analyze_text(text)
             if "error" in result:
                 logging.error(
-                    f"Image processing error: {result['error']}", exc_info=True)
+                    f"Text processing error: {result['error']}", exc_info=True)
                 raise HTTPException(400, "Image processing failed")
             
             return JSONResponse({"result": result})
