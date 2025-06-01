@@ -2,12 +2,15 @@ import pytesseract
 from PIL import Image
 import os
 import logging
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class OCRAgent:
     def __init__(self):
         # Configure Tesseract path for Windows
-        self.tesseract_path = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+        self.tesseract_path = os.getenv('TESSERACT_PATH')
+        self.tesseract_config = os.getenv('TESSERACT_CONFIG')
 
         # Verify installation
         if not os.path.exists(self.tesseract_path):
@@ -24,12 +27,9 @@ class OCRAgent:
         try:
             img = image.convert('L')  # Convert to grayscale
 
-            # OEM=LSTM, PSM=Assume single uniform block
-            custom_config = r'--oem 3 --psm 6'
-
             return pytesseract.image_to_string(
                 img,
-                config=custom_config,
+                config=self.tesseract_config,
                 timeout=5
             )
         except pytesseract.TesseractError as e:
