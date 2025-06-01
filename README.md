@@ -275,13 +275,16 @@ pip install -r requirements.txt
 
 ## Step 6: Configure Tesseract Path (Windows Only)
 
-If you're on Windows, you may need to specify the Tesseract path in your code:
+If you're on Windows, you may need to specify the Tesseract path in your env file:
 
-```python
-import pytesseract
+```bash
+# For Windows
+TESSERACT_PATH=C:\Program Files\Tesseract-OCR\tesseract.exe 
 
-# Add this line with your actual Tesseract installation path
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# For Linux
+TESSERACT_PATH=C:\Program /usr/bin/tesseract
+
+
 ```
 
 
@@ -402,6 +405,18 @@ Step 4: Assign Roles
     
     - Store it locally and mention the location of the file in .env under GOOGLE_APPLICATION_CREDENTIALS.
 
+# Setup Backend Service with Docker(Easier)
+Use docker compose to create image and run the container by using this single command in the root of `backend` directory:
+```bash
+docker-compose up --build
+```
+
+**Note:** Keep in mind in `docker-compose.yml`, set the environment variables accordingly like groq API key and location of the service account credentials file.
+
+For service account credentials, the suggestion would be to keep it just in the root of the `backend` directory and so you just need to pass the file path as: `your-google-service-account.json` both in the Dockerfile(do not forget to make changes in Dockerfile) and in `docker-compose.yml`.
+
+
+
 # Next.js Frontend Setup Guide
 
 This guide will help you set up the Next.js frontend application for the project.
@@ -457,7 +472,9 @@ npm run dev
 ## Prompt Injection Detector
 This prompt injection detector checks user inputs for suspicious patterns that might try to manipulate AI systems. It looks for phrases that attempt to override instructions, execute commands, access sensitive data, or change system behavior. When it detects these red flags (like "ignore previous instructions" or code execution attempts), it raises an error to block the input. This helps prevent users from tricking AI systems into doing unintended things. The detector uses simple pattern matching to catch common attack methods.
 
+---
 ## CORS
 The CORS middleware has been added to FastAPI server with basic configurations, for more security we can add a proxy server like Nginx and add the origin and host of the proxy server which will get all the requests from client and redirect to the server. This is yet to be implemented.
+
 
 
