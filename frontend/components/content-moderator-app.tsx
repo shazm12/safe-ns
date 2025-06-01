@@ -33,8 +33,6 @@ export function ContentModeratorApp() {
 
       const result = await moderateContent(type, moderationInput);
 
-      console.log(result);
-
       const isSafe = !result?.is_toxic;
       const summary = result?.summary;
       const confidence = result?.confidence * 100;
