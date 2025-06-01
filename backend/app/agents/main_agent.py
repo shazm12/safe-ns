@@ -2,7 +2,7 @@ from typing import Dict
 from PIL import Image
 import asyncio
 from . import OCRAgent, NSFWAgent, ToxicityAgent
-from app.helpers import ImagePreprocessor
+from app.helpers import ImagePreprocessor, PromptInjectionDetector
 from typing import Dict, Any
 from groq import Groq
 import os
@@ -16,6 +16,7 @@ class MainAgent:
         self.nsfw_agent = NSFWAgent()
         self.toxicity_agent = ToxicityAgent()
         self.imagePreprocessor = ImagePreprocessor()
+        self.promptInjectionDetector = PromptInjectionDetector()
 
     async def analyze_image(self, image: Image.Image) -> Dict:
 
@@ -28,6 +29,12 @@ class MainAgent:
                 self._run_ocr(processed_image),
                 self._run_nsfw(processed_image)
             )
+
+            is_prompt_injection = self.promptInjectionDetector.is_injection(
+                ocr_text)
+
+            if (is_prompt_injection):
+                raise ValueError("Possible Prompt Injection")
 
             # Process text toxicity if text exists
             text_result = {}
@@ -76,7 +83,11 @@ class MainAgent:
 
     async def analyze_text(self, text: str) -> str:
         try:
-
+            is_prompt_injection = self.promptInjectionDetector.is_injection(
+                text)
+            if (is_prompt_injection):
+                raise ValueError("Possible Prompt Injection")
+            
             text_result = self.toxicity_agent.analyze(text)
             # Extract offensive words details
             offensive_words = []
