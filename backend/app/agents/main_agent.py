@@ -74,9 +74,8 @@ class MainAgent:
             }
 
             summary = await self._prepare_summary_data(analysis_json)
-            if (summary.error):
-                return {"error": error}
-
+            error = summary.get("error", {})
+            
             return {"is_toxic": overall_safeness, "confidence": float(overall_confidence), "summary": summary}
 
         except Exception as e:
@@ -119,9 +118,7 @@ class MainAgent:
             }
 
             summary = await self._prepare_summary_data(analysis_json)
-            if (summary.error):
-                return {"error": error}
-
+            
             return {"is_toxic": bool(text_result.get("is_toxic", False)), "confidence": float(text_result.get("confidence", 0)), "summary": summary}
 
         except Exception as e:
@@ -190,24 +187,25 @@ class MainAgent:
                                 if overall_toxic else
                                 "Note the content appears safe for most audiences based on both text and image analysis.")
 
-        prompt = (
-            "[INST] <<SYS>>\n"
-            "You are a content safety analyst. Generate a concise 5-6 sentence summary that:\n"
-            "1. Clearly states overall safety status considering both text and images\n"
-            "2. Identifies specific risks from either text or images if toxic\n"
-            "3. Provides appropriate recommendations based on combined analysis\n\n"
-            f"Key data:\n{data_description}\n\n"
-            "Instructions:\n"
-            "- Be factual and precise about both text and image findings\n"
-            "- Never contradict the toxicity analysis\n"
-            "- Mention if only one component (text or image) is problematic, please talk about only one component or category of text or image in specific that has high likelihood\n"
-            "- If you do not get likelihood for certain categories of text or image, pick first two from the category list and elaborate more on it."
-            "- For images, consider both flagged categories and visual cues\n"
-            f"- {toxicity_instruction}\n",
-            "[/INST]<</SYS>>",
-            "[INST]"
-            "Generate the combined safety summary[/INST]\n"
-        )
+        prompt = f"""[INST] <<SYS>>
+            You are a content safety analyst. Generate a concise 5-6 sentence summary that:
+            1. Clearly states overall safety status considering both text and images
+            2. Identifies specific risks from either text or images if toxic
+            3. Provides appropriate recommendations based on combined analysis
+
+            Key data:
+            {data_description}
+
+            Instructions:
+            - Be factual and precise about both text and image findings
+            - Never contradict the toxicity analysis
+            - Mention if only one component (text or image) is problematic, please talk about only one component or category of text or image in specific that has high likelihood
+            - If you do not get likelihood for certain categories of text or image, pick first two from the category list and elaborate more on it.
+            - For images, consider both flagged categories and visual cues
+            - {toxicity_instruction}
+            <</SYS>>
+
+            Generate the combined safety summary[/INST]"""
 
         try:
             response = client.chat.completions.create(
