@@ -4,13 +4,14 @@ from typing import Dict, List
 import json
 from dotenv import load_dotenv
 import os
+import logging
 # Load environment variables from .env file
 load_dotenv()
 
 
 class ToxicityAgent:
     def __init__(self, model_name: str = "llama3-70b-8192"):
-        
+
         # Initialize Groq client
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model_name = model_name
@@ -94,6 +95,7 @@ class ToxicityAgent:
             }
 
         except Exception as e:
+            logging.error(e, exc_info=True)
             return {
                 "is_toxic": False,
                 "error": str(e),

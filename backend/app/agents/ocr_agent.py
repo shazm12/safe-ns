@@ -1,6 +1,7 @@
 import pytesseract
 from PIL import Image
 import os
+import logging
 
 
 class OCRAgent:
@@ -32,6 +33,9 @@ class OCRAgent:
                 timeout=5
             )
         except pytesseract.TesseractError as e:
+            logging.error(e, exc_info=True)
             return f"OCR Error: {str(e)}"
         except Exception as e:
+            logging.error(e, exc_info=True)
+            logging.error(e, exc_info=True)
             return f"Image processing error: {str(e)}"
