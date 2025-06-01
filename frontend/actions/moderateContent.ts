@@ -1,7 +1,7 @@
 "use server";
 import { ModerationType, ModeratedContent } from "@/lib/types";
 
-const API_URL = "http://localhost:8000/moderate";
+const API_URL = process.env.API_URL!;
 
 export async function moderateContent(
   type: ModerationType,
