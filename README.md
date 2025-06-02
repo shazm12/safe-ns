@@ -185,7 +185,7 @@ graph TD
     J --> K[Output Image]
 ```
 
-## Inference and Deployment
+## Inference 
 
 Initally I was running the Llama model locally on my machine when using it and the problem was that my computer not being a super computer with good amount of GPU and RAM, the inferences from the model were taking almost a minute which would also be the case when I decide to deploy on a lambda or a normal web server or else i need to configure a very powerful server(EC2 preferbly) with good GBs of RAM and a powerful GPU.
 
@@ -193,7 +193,17 @@ VERY COSTLY AND TIME CONSUMING TO DEPLOY!!
 
 Hence, with some research, I came across Groq AI - A Fast AI inference Library where they have custom hardware with all the popular open source models hosted on them and provide a simple API interface using SDKs or direct API links to use these models and get inferences in much low latency and high throughput( sometimes getting responses in 100ms).
 
-I am yet to plan for deploying on a server.
+# Deployment
+
+- The frontend is hosted on [Vercel](https://vercel.com/).
+- The backend is hosted as a web service on [Render](https://render.com/) via docker containerization.
+
+
+# 🧊 Cold Start Notice
+
+This app is deployed on [Render’s free tier](https://render.com/), which can result in cold starts. This may lead to initial response times of up to a minute after a period of inactivity. Subsequent requests will respond much faster.
+
+
 
 # Backend Dev Setup
 
