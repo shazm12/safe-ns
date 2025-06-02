@@ -365,13 +365,13 @@ Step 2: Enable the Google Vision API
         
         - Click the "Enable" button.
 
-Step 3: Create a Service Account
+Step 3.1: Create a Service Account(Recommended)
         
         - Go to API An Services from sidebar or search.
         
         - Go to credentials.
         
-        - Click on manage servie account.
+        - Click on manage service account.
         
         - Click on create new service account.
         
@@ -379,7 +379,20 @@ Step 3: Create a Service Account
         
         - Click "Create and Continue".
 
-Step 4: Assign Roles
+Step 3.2: Create an API Key
+        
+        - Go to API An Services from sidebar or search.
+        
+        - Go to credentials.
+        
+        - Click on create new credentials.
+        
+        - Click on API Key.
+
+        - You will get the key Copy and then follow other steps.
+        
+
+Step 4: Assign Roles(For Service Account only)
     
     - Under "Grant this service account access to project", assign roles:
     
@@ -403,7 +416,11 @@ Step 4: Assign Roles
     
     - The key file (service-account-key.json) will download automatically.
     
-    - Store it locally and mention the location of the file in .env under GOOGLE_APPLICATION_CREDENTIALS.
+Step 5: Update environmental vars with key or service account
+
+    - If Service account, store it locally and mention the location of the file in `.env` and `docker-compose.yml` under GOOGLE_APPLICATION_CREDENTIALS. Also uncomment the line in `nsfw_agent.py` for same accordingly.
+    
+    - If API KEY, update the `env` and `docker-compose.yml` under GOOGLE_API_KEY, check in `nsfw_agent.py` if the code is accessing the key from environmental variables.
 
 # Setup Backend Service with Docker(Easier)
 Use docker compose to create image and run the container by using this single command in the root of `backend` directory:
@@ -414,6 +431,8 @@ docker-compose up --build
 **Note:** Keep in mind in `docker-compose.yml`, set the environment variables accordingly like groq API key and location of the service account credentials file.
 
 For service account credentials, the suggestion would be to keep it just in the root of the `backend` directory and so you just need to pass the file path as: `your-google-service-account.json` both in the Dockerfile(do not forget to make changes in Dockerfile) and in `docker-compose.yml`.
+
+For API Key, just update the docker-compose file in the **environment** section, the API key under GOOGLE_API_KEY.
 
 
 
