@@ -506,5 +506,8 @@ This prompt injection detector checks user inputs for suspicious patterns that m
 ## CORS
 The CORS middleware has been added to FastAPI server with basic configurations, for more security we can add a proxy server like Nginx and add the origin and host of the proxy server which will get all the requests from client and redirect to the server. This is yet to be implemented.
 
+---
+# Proxy Backend Requests From Client
+Well, this is automatically being taken care by Next.js where the server actions I have written to call my FastAPI server is being proxied through so when someone would try to inspect the network request to know the backend service URL , it would show the same frontend URL and this secures my backend service from various attacks like DDos Attack and various other attacks as this information is also not relevant to be known by end users.
 
 
