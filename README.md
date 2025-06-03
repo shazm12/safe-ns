@@ -203,6 +203,7 @@ Hence, with some research, I came across Groq AI - A Fast AI inference Library w
 
 This app is deployed on [Render’s free tier](https://render.com/), which can result in cold starts. This may lead to initial response times of up to a minute after a period of inactivity. Subsequent requests will respond much faster.
 
+At times you might get 504 Gateway timeout response, if so you can try another request after that and it would work fine. This happens due to very long cold start times.
 
 
 # Backend Dev Setup
