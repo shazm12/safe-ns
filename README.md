@@ -1,5 +1,5 @@
 
-# Safe-NS:Multi-Modal Content Moderator (Image & Text)
+# Safe-NS: Multi-Modal Content Moderator (Image & Text)
 
 # Overview
 
