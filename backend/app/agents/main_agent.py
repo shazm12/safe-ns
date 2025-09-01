@@ -208,7 +208,7 @@ class MainAgent:
         try:
             response = client.chat.completions.create(
                 messages=[{"role": "user", "content": prompt}],
-                model="llama3-70b-8192",
+                model="llama-3.3-70b-versatile",
                 temperature=0.0,  # Use 0 for maximum consistency
                 max_tokens=250  # Slightly more tokens for combined analysis
             )
