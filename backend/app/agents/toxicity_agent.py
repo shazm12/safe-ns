@@ -10,7 +10,7 @@ load_dotenv()
 
 
 class ToxicityAgent:
-    def __init__(self, model_name: str = "llama3-70b-8192"):
+    def __init__(self, model_name: str = "llama-3.3-70b-versatile"):
 
         # Initialize Groq client
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
